@@ -21,6 +21,7 @@ const isOnlineReleaseUpgradeTest =
   onlineReleaseUpgradeStage === "upgrade" ||
   onlineReleaseUpgradeStage === "idempotency";
 const isPresentationProbe = process.env.PAPERCHAT_PRESENTATION_PROBE === "1";
+const isCodexProbe = process.env.PAPERCHAT_CODEX_TEST === "1";
 const presentationProbeOutputPath = resolve(
   ".scaffold/presentation-probe/paperchat-presentation-probe.pptx",
 );
@@ -180,6 +181,13 @@ export default defineConfig({
 
   test: {
     waitForPlugin: `() => Zotero.${pkg.config.addonInstance}.data.initialized`,
+    ...(isCodexProbe
+      ? {
+          entries: "test-codex-zotero",
+          startupDelay: 2000,
+          mocha: { timeout: 20000 },
+        }
+      : {}),
     ...(isOnlineReleaseUpgradeTest
       ? {
           entries: "test-online-release-upgrade",

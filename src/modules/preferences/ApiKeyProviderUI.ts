@@ -7,6 +7,11 @@ import { prefColors } from "../../utils/colors";
 import { getProviderManager } from "../providers";
 import type { ApiKeyProviderConfig } from "../../types/provider";
 import { clearElement, showTestResult } from "./utils";
+import {
+  CODEX_CLIENT_VERSION,
+  isCodexSwitchConfig,
+  isLoopbackUrl,
+} from "../providers/CodexSwitchProvider";
 
 type ProviderMetadata = ReturnType<
   typeof getProviderManager
@@ -100,6 +105,9 @@ export function populateApiKeyPanel(
   const baseurlEl = doc.getElementById(
     "pref-provider-baseurl",
   ) as HTMLInputElement;
+  const protocolEl = doc.getElementById(
+    "pref-provider-api-protocol",
+  ) as unknown as XULMenuListElement;
   const modelSelect = doc.getElementById(
     "pref-provider-model",
   ) as unknown as XULMenuListElement;
@@ -125,6 +133,30 @@ export function populateApiKeyPanel(
   if (apikeyEl) apikeyEl.value = config.apiKey || "";
   if (baseurlEl)
     baseurlEl.value = config.baseUrl || metadata?.defaultBaseUrl || "";
+  if (protocolEl) protocolEl.value = config.apiProtocol || "chat";
+  const local = isCodexSwitchConfig(config);
+  const protocolRow = doc.getElementById("pref-provider-protocol-row");
+  if (protocolRow)
+    protocolRow.hidden = !["openai", "openai-compatible", "custom"].includes(
+      config.type,
+    );
+  if (descEl && local) descEl.textContent = getString("pref-codex-description");
+  if (apikeyEl)
+    apikeyEl.placeholder = local ? getString("pref-codex-key-optional") : "";
+  const versionRow = doc.getElementById("pref-provider-client-version-row");
+  if (versionRow) versionRow.hidden = !local;
+  const versionEl = doc.getElementById(
+    "pref-provider-client-version",
+  ) as HTMLInputElement;
+  if (versionEl) versionEl.value = config.clientVersion || CODEX_CLIENT_VERSION;
+  for (const field of [
+    maxTokensEl,
+    temperatureEl,
+    extraRequestBodyEl,
+    modelExtraRequestBodyEl,
+  ]) {
+    if (field) field.disabled = local;
+  }
   if (maxTokensEl) maxTokensEl.value = String(config.maxTokens || 8192);
   if (temperatureEl) temperatureEl.value = String(config.temperature ?? 0.7);
   if (systemPromptEl) systemPromptEl.value = config.systemPrompt || "";
@@ -327,6 +359,9 @@ export function saveCurrentProviderConfig(
   const baseurlEl = doc.getElementById(
     "pref-provider-baseurl",
   ) as HTMLInputElement;
+  const protocolEl = doc.getElementById(
+    "pref-provider-api-protocol",
+  ) as unknown as XULMenuListElement;
   const modelSelect = doc.getElementById(
     "pref-provider-model",
   ) as unknown as XULMenuListElement;
@@ -350,7 +385,11 @@ export function saveCurrentProviderConfig(
   const wasEnabled = (
     providerManager.getProviderConfig(currentProviderId) as ApiKeyProviderConfig
   )?.enabled;
-  const isNowEnabled = !!apiKey.trim();
+  const apiProtocol = (protocolEl?.value ||
+    "chat") as ApiKeyProviderConfig["apiProtocol"];
+  const isNowEnabled =
+    !!apiKey.trim() ||
+    (apiProtocol === "codex-switch" && isLoopbackUrl(baseurlEl?.value || ""));
 
   let extraRequestBody: Record<string, unknown> | undefined;
   let modelExtraRequestBody:
@@ -377,6 +416,11 @@ export function saveCurrentProviderConfig(
     enabled: isNowEnabled, // Auto-enable when API key is filled
     apiKey,
     baseUrl: baseurlEl?.value || "",
+    apiProtocol,
+    clientVersion:
+      (
+        doc.getElementById("pref-provider-client-version") as HTMLInputElement
+      )?.value.trim() || CODEX_CLIENT_VERSION,
     defaultModel: modelSelect?.value || "",
     maxTokens: parseInt(maxTokensEl?.value) || 8192,
     temperature: parseFloat(temperatureEl?.value) || 0.7,
@@ -520,6 +564,25 @@ export function bindApiKeyEvents(
     saveCurrentProviderConfig(doc, getCurrentProviderId()),
   );
 
+  const protocolSelect = doc.getElementById(
+    "pref-provider-api-protocol",
+  ) as unknown as XULMenuListElement;
+  protocolSelect?.addEventListener("command", () => {
+    const id = getCurrentProviderId();
+    saveCurrentProviderConfig(doc, id);
+    const config = providerManager.getProviderConfig(
+      id,
+    ) as ApiKeyProviderConfig;
+    populateApiKeyPanel(doc, config, providerManager.getProviderMetadata(id));
+    onProviderListRefresh();
+    onActiveProviderRefresh();
+  });
+  doc
+    .getElementById("pref-provider-client-version")
+    ?.addEventListener("blur", () =>
+      saveCurrentProviderConfig(doc, getCurrentProviderId()),
+    );
+
   // Model selection
   const modelSelect = doc.getElementById(
     "pref-provider-model",
@@ -568,14 +631,17 @@ export function bindApiKeyEvents(
 
   // Refresh models button
   const refreshModelsBtn = doc.getElementById("pref-refresh-models");
-  refreshModelsBtn?.addEventListener("click", () =>
-    autoFetchModels(doc, getCurrentProviderId()),
-  );
+  refreshModelsBtn?.addEventListener("click", () => {
+    const id = getCurrentProviderId();
+    saveCurrentProviderConfig(doc, id);
+    void autoFetchModels(doc, id);
+  });
 
   // Test connection button
   const testConnectionBtn = doc.getElementById("pref-test-connection");
   testConnectionBtn?.addEventListener("click", async () => {
     const currentProviderId = getCurrentProviderId();
+    saveCurrentProviderConfig(doc, currentProviderId);
     const provider = providerManager.getProvider(currentProviderId);
     if (!provider) {
       showTestResult(doc, getString("pref-provider-not-ready"), true);
@@ -591,7 +657,8 @@ export function bindApiKeyEvents(
         showTestResult(doc, getString("pref-test-failed"), true);
       }
     } catch (e) {
-      showTestResult(doc, getString("pref-test-failed"), true);
+      const detail = e instanceof Error ? e.message : String(e);
+      showTestResult(doc, `${getString("pref-test-failed")}: ${detail}`, true);
     }
   });
 

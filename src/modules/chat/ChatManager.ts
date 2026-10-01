@@ -1,4 +1,6 @@
 import { addTokenUsage } from "./message-token-usage";
+import { OpenAIResponsesProvider } from "../providers/OpenAIResponsesProvider";
+import { CodexSwitchProvider } from "../providers/CodexSwitchProvider";
 /**
  * ChatManager - 聊天会话管理核心类
  *
@@ -2208,6 +2210,19 @@ export class ChatManager {
         return false;
       }
       let provider = requiredProvider || this.getActiveProvider();
+      // Bind each request to its own session. Preserve encrypted reasoning and
+      // tool items without sharing mutable context with parallel conversations.
+      if (provider instanceof CodexSwitchProvider) {
+        provider = new CodexSwitchProvider(
+          { ...provider.config },
+          { sessionId: sendingSession.id },
+        );
+      } else if (provider instanceof OpenAIResponsesProvider) {
+        provider = new OpenAIResponsesProvider(
+          { ...provider.config },
+          { sessionId: sendingSession.id },
+        );
+      }
       chatProviderId = providerManager.getActiveProviderId();
       if (
         options.requiredProviderId &&

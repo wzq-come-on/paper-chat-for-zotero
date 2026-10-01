@@ -14,6 +14,13 @@ import type {
   FallbackConfig,
 } from "../../types/provider";
 import { OpenAICompatibleProvider } from "./OpenAICompatibleProvider";
+import { OpenAIResponsesProvider } from "./OpenAIResponsesProvider";
+import {
+  CodexSwitchProvider,
+  CODEX_SWITCH_BASE_URL,
+  CODEX_CLIENT_VERSION,
+  isCodexSwitchConfig,
+} from "./CodexSwitchProvider";
 import { AnthropicProvider } from "./AnthropicProvider";
 import { GeminiProvider } from "./GeminiProvider";
 import { PaperChatProvider } from "./PaperChatProvider";
@@ -36,6 +43,15 @@ import { normalizeReasoningEffortPreference } from "./reasoning-request";
  * user-added entries, not hard-coded here.
  */
 export const BUILTIN_PROVIDERS: Record<BuiltinProviderId, ProviderMetadata> = {
+  "codex-switch": {
+    id: "codex-switch",
+    name: "Codex Switch",
+    description:
+      "Connect to your running Codex Switch local proxy. No API key is needed on this computer. Refresh models, then test the connection.",
+    defaultBaseUrl: CODEX_SWITCH_BASE_URL,
+    website: "",
+    type: "custom",
+  },
   paperchat: {
     id: "paperchat",
     name: "PaperChat",
@@ -295,6 +311,7 @@ export class ProviderManager {
       "claude",
       "gemini",
       "deepseek",
+      "codex-switch",
     ];
 
     apiKeyProviders.forEach((id, index) => {
@@ -303,13 +320,16 @@ export class ProviderManager {
         id,
         name: meta.name,
         type: meta.type,
-        enabled: false,
+        enabled: id === "codex-switch",
         isBuiltin: true,
         order: index + 1,
         apiKey: "",
         baseUrl: meta.defaultBaseUrl,
         defaultModel: "",
         availableModels: [],
+        ...(id === "codex-switch"
+          ? { apiProtocol: "codex-switch", clientVersion: CODEX_CLIENT_VERSION }
+          : {}),
       } as ApiKeyProviderConfig);
     });
 
@@ -317,6 +337,8 @@ export class ProviderManager {
   }
 
   private shouldClearUnfetchedBuiltinModels(config: ProviderConfig): boolean {
+    if (config.type !== "paperchat" && isCodexSwitchConfig(config))
+      return false;
     if (!config.isBuiltin || !(config.id in BUILTIN_PROVIDERS)) {
       return false;
     }
@@ -405,6 +427,16 @@ export class ProviderManager {
       configs.push(paperchat);
     }
 
+    if (!configs.some((provider) => provider.id === "codex-switch")) {
+      const local = this.getDefaultConfigs().find(
+        (provider) => provider.id === "codex-switch",
+      )!;
+      configs.push({
+        ...local,
+        order: Math.max(...configs.map((provider) => provider.order), 0) + 1,
+      });
+      changed = true;
+    }
     return { configs, changed };
   }
 
@@ -437,13 +469,21 @@ export class ProviderManager {
         return new GeminiProvider(config as ApiKeyProviderConfig);
       case "openai":
       case "openai-compatible":
-      case "custom":
-        return new OpenAICompatibleProvider({
+      case "custom": {
+        const apiConfig = {
           ...(config as ApiKeyProviderConfig),
           reasoningEffort: normalizeReasoningEffortPreference(
             getPref("reasoningEffort"),
           ),
-        });
+        } as ApiKeyProviderConfig;
+        if (isCodexSwitchConfig(apiConfig)) {
+          return new CodexSwitchProvider(apiConfig);
+        }
+        if (apiConfig.apiProtocol === "responses") {
+          return new OpenAIResponsesProvider(apiConfig);
+        }
+        return new OpenAICompatibleProvider(apiConfig);
+      }
       default:
         return null;
     }
@@ -559,6 +599,7 @@ export class ProviderManager {
       baseUrl: "",
       defaultModel: "",
       availableModels: [],
+      apiProtocol: "chat",
     };
     this.configs.push(config);
     this.saveToPrefs();

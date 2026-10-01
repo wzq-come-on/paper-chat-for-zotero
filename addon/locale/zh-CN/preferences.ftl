@@ -29,6 +29,10 @@ pref-paperchat-purchase-timeout = 暂未检测到支付成功，请完成支付�
 # API Settings
 pref-api-settings = API 设置
 pref-model = 模型
+pref-api-protocol = 接口协议
+pref-client-version = 客户端版本
+pref-codex-description = 使用已运行的 Codex Switch 本地代理。点击刷新、选择模型并测试连接；使用 Switch 当前账号的额度。温度和输出上限由代理管理。
+pref-codex-key-optional = 同一台电脑可留空；局域网访问需填写密钥
 pref-model-placeholder =
     .placeholder = gpt-4o
 pref-advanced-options = 高级选项

@@ -1,4 +1,8 @@
-<h1><img src="addon/content/icons/favicon.svg" width="32" height="32" alt=""> AI Paper Chat</h1>
+<h1><img src="addon/content/icons/favicon.svg" width="32" height="32" alt=""> AI Paper Chat — Codex Switch fork</h1>
+
+本 fork 新增 **Codex Switch 本地代理**：模型发现、Responses 流式问答、划词翻译及工具调用。
+见 [安装、配置与开发说明](CODEX-SWITCH.md)。保留上游作者署名与 AGPL-3.0-or-later 许可。
+本版本已关闭上游自动更新，以保留本地代理适配。以下为原项目介绍。
 
 **AI research assistant: chat with papers, translate selections, find literature, and generate notes and slides.**
 

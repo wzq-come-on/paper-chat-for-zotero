@@ -48,10 +48,7 @@ import {
   destroyReadingLoopService,
   initReadingLoopService,
 } from "./modules/reading-loop";
-import {
-  startSelfUpdateScheduler,
-  stopSelfUpdateScheduler,
-} from "./utils/selfUpdate";
+import { stopSelfUpdateScheduler } from "./utils/selfUpdate";
 import {
   registerReaderChatEntries,
   unregisterReaderChatEntries,
@@ -145,7 +142,7 @@ async function onStartup() {
   getAnalyticsService().track(ANALYTICS_EVENTS.pluginStarted, {
     startup_mode: "normal",
   });
-  startSelfUpdateScheduler();
+  // This fork is upgraded manually; upstream auto-updates would remove the adapter.
 }
 
 async function onMainWindowLoad(win: _ZoteroTypes.MainWindow): Promise<void> {

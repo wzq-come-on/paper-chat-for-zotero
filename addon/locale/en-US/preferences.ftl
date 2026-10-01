@@ -29,6 +29,10 @@ pref-paperchat-purchase-timeout = Payment has not been detected yet. Finish paym
 # API Settings
 pref-api-settings = API Settings
 pref-model = Model
+pref-api-protocol = API protocol
+pref-client-version = Client version
+pref-codex-description = Use the running Codex Switch proxy. Refresh models, select one, and test. This uses the account selected in Codex Switch; temperature and token limit are managed by the gateway.
+pref-codex-key-optional = Optional on this computer; required for LAN access
 pref-model-placeholder =
     .placeholder = gpt-4o
 pref-advanced-options = Advanced Options

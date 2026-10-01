@@ -5,6 +5,10 @@
 import { getString } from "../../utils/locale";
 import { prefColors } from "../../utils/colors";
 import { getProviderManager } from "../providers";
+import {
+  isCodexSwitchConfig,
+  isLoopbackUrl,
+} from "../providers/CodexSwitchProvider";
 import { getAuthManager } from "../auth";
 import type {
   ProviderConfig,
@@ -140,7 +144,12 @@ function isProviderConfigured(config: ProviderConfig): boolean {
   } else {
     // API key providers are configured if they have an API key and are enabled
     const apiKeyConfig = config as ApiKeyProviderConfig;
-    return apiKeyConfig.enabled && !!apiKeyConfig.apiKey?.trim();
+    return (
+      apiKeyConfig.enabled &&
+      (!!apiKeyConfig.apiKey?.trim() ||
+        (isCodexSwitchConfig(apiKeyConfig) &&
+          isLoopbackUrl(apiKeyConfig.baseUrl)))
+    );
   }
 }
 

@@ -31,7 +31,7 @@ import { mergeContinuationText } from "../chat/agent-runtime/outputTruncationCon
 type ResponsesInputItem = Record<string, unknown>;
 type ResponsesOutputItem = Record<string, unknown>;
 
-interface ResponsesApiResponse {
+export interface ResponsesApiResponse {
   id?: string;
   status?: string;
   store?: boolean;
@@ -848,6 +848,7 @@ export async function parseResponsesSSEStream(
     number,
     { id: string; name: string; arguments: string; started: boolean }
   >();
+  const completedItems = new Map<number, ResponsesOutputItem>();
 
   const emitToolStart = (
     index: number,
@@ -987,6 +988,14 @@ export async function parseResponsesSSEStream(
     }
     if (type === "response.output_item.done") {
       const item = event.item;
+      if (item && typeof item === "object") {
+        completedItems.set(
+          typeof event.output_index === "number"
+            ? event.output_index
+            : completedItems.size,
+          item as ResponsesOutputItem,
+        );
+      }
       if (
         item &&
         typeof item === "object" &&
@@ -1082,8 +1091,13 @@ export async function parseResponsesSSEStream(
     throw new Error("Responses API stream ended before response.completed");
   }
   if (!completedResponse.output?.length) {
-    const synthesized: ResponsesOutputItem[] = [];
-    if (accumulatedReasoning) {
+    const synthesized: ResponsesOutputItem[] = [...completedItems.entries()]
+      .sort(([a], [b]) => a - b)
+      .map(([, item]) => item);
+    if (
+      accumulatedReasoning &&
+      !synthesized.some((item) => item.type === "reasoning")
+    ) {
       synthesized.push({
         type: "reasoning",
         summary: [{ type: "summary_text", text: accumulatedReasoning }],
@@ -1092,6 +1106,13 @@ export async function parseResponsesSSEStream(
     for (const [index, toolCall] of [...toolCalls.entries()].sort(
       ([left], [right]) => left - right,
     )) {
+      if (
+        synthesized.some(
+          (item) =>
+            item.type === "function_call" && item.call_id === toolCall.id,
+        )
+      )
+        continue;
       synthesized.push({
         type: "function_call",
         id: `fc_stream_${index}`,
@@ -1100,7 +1121,10 @@ export async function parseResponsesSSEStream(
         arguments: toolCall.arguments,
       });
     }
-    if (accumulatedText || accumulatedRefusal) {
+    if (
+      (accumulatedText || accumulatedRefusal) &&
+      !synthesized.some((item) => item.type === "message")
+    ) {
       const content: ResponsesInputItem[] = [];
       if (accumulatedText) {
         content.push({
@@ -1154,11 +1178,43 @@ export class OpenAIResponsesProvider extends OpenAICompatibleProvider {
     this.runtimeOptions = { ...options };
   }
 
+  /** Gateway subclasses may adapt request parameters without changing chat logic. */
+  protected adaptRequestBody(
+    body: Record<string, unknown>,
+  ): Record<string, unknown> {
+    return body;
+  }
+
+  protected requestHeaders(): Record<string, string> {
+    return {
+      "Content-Type": "application/json",
+      ...(this._config.apiKey
+        ? { Authorization: `Bearer ${this._config.apiKey}` }
+        : {}),
+    };
+  }
+
+  protected requestUrl(): string {
+    return `${this._config.baseUrl.replace(/\/+$/, "")}/responses`;
+  }
+
+  protected async readCompletedResponse(
+    response: Response,
+  ): Promise<ResponsesApiResponse> {
+    if (response.headers.get("content-type")?.includes("text/event-stream")) {
+      return parseResponsesSSEStream(this.getResponseReader(response), {});
+    }
+    return response.json() as Promise<ResponsesApiResponse>;
+  }
+
   private getConversationState(): ResponsesConversationState | undefined {
     const sessionId = this.runtimeOptions.sessionId;
     return sessionId
       ? conversationStates.get(
-          conversationKey(sessionId, this._config.defaultModel),
+          conversationKey(
+            sessionId,
+            `${this._config.id}:${this._config.baseUrl}:${this._config.defaultModel}`,
+          ),
         )
       : undefined;
   }
@@ -1168,7 +1224,10 @@ export class OpenAIResponsesProvider extends OpenAICompatibleProvider {
     if (!sessionId) {
       return;
     }
-    const key = conversationKey(sessionId, this._config.defaultModel);
+    const key = conversationKey(
+      sessionId,
+      `${this._config.id}:${this._config.baseUrl}:${this._config.defaultModel}`,
+    );
     // Refresh insertion order so active sessions are retained by the small
     // process-wide bound below.
     conversationStates.delete(key);
@@ -1188,7 +1247,10 @@ export class OpenAIResponsesProvider extends OpenAICompatibleProvider {
       return;
     }
     conversationStates.delete(
-      conversationKey(sessionId, this._config.defaultModel),
+      conversationKey(
+        sessionId,
+        `${this._config.id}:${this._config.baseUrl}:${this._config.defaultModel}`,
+      ),
     );
   }
 
@@ -1339,13 +1401,10 @@ export class OpenAIResponsesProvider extends OpenAICompatibleProvider {
     let body = this.buildRequestBody(plan, tools, stream, options);
     let forceStateless = false;
     const send = () =>
-      fetch(`${this._config.baseUrl}/responses`, {
+      fetch(this.requestUrl(), {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${this._config.apiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: stablePromptCacheStringify(body),
+        headers: this.requestHeaders(),
+        body: stablePromptCacheStringify(this.adaptRequestBody(body)),
         signal,
       });
 
@@ -1565,7 +1624,7 @@ export class OpenAIResponsesProvider extends OpenAICompatibleProvider {
       false,
       signal,
     );
-    const completed = (await response.json()) as ResponsesApiResponse;
+    const completed = await this.readCompletedResponse(response);
     const error = responseError(completed);
     if (error) {
       throw error;
@@ -1588,7 +1647,7 @@ export class OpenAIResponsesProvider extends OpenAICompatibleProvider {
     }
     const { response, plan, forceStateless, isolatedStateless } =
       await this.request(messages, tools, false, signal, options);
-    const completed = (await response.json()) as ResponsesApiResponse;
+    const completed = await this.readCompletedResponse(response);
     const error = responseError(completed);
     if (error) {
       throw error;

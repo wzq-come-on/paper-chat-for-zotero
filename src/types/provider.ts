@@ -73,7 +73,8 @@ export type BuiltinProviderId =
   | "openai"
   | "claude"
   | "gemini"
-  | "deepseek";
+  | "deepseek"
+  | "codex-switch";
 
 /**
  * Base provider configuration
@@ -121,6 +122,10 @@ export interface ApiKeyProviderConfig extends BaseProviderConfig {
   reasoningCapability?: ModelReasoningCapability;
   extraRequestBody?: Record<string, unknown>;
   modelExtraRequestBody?: Record<string, Record<string, unknown>>;
+  /** HTTP protocol used by the provider endpoint. */
+  apiProtocol?: "chat" | "responses" | "codex-switch";
+  /** Model discovery version required by Codex-compatible gateways. */
+  clientVersion?: string;
 }
 
 /**

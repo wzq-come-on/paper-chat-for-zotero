@@ -487,7 +487,47 @@
           ></html:input>
         </hbox>
 
+        <!-- API protocol -->
+        <hbox
+          id="pref-provider-protocol-row"
+          align="center"
+          style="margin-bottom: 8px"
+        >
+          <label
+            for="pref-provider-api-protocol"
+            data-l10n-id="pref-api-protocol"
+            style="width: 70px; text-align: right"
+          ></label>
+          <menulist
+            id="pref-provider-api-protocol"
+            style="flex: 1; margin-left: 8px; min-width: 120px"
+          >
+            <menupopup>
+              <menuitem label="OpenAI Chat Completions" value="chat" />
+              <menuitem label="OpenAI Responses" value="responses" />
+              <menuitem label="Codex Switch" value="codex-switch" />
+            </menupopup>
+          </menulist>
+        </hbox>
+
         <!-- Model Selection -->
+        <hbox
+          id="pref-provider-client-version-row"
+          hidden="true"
+          align="center"
+          style="margin-bottom: 8px"
+        >
+          <label
+            for="pref-provider-client-version"
+            data-l10n-id="pref-client-version"
+            style="width: 70px; text-align: right"
+          ></label>
+          <html:input
+            type="text"
+            id="pref-provider-client-version"
+            style="flex: 1; margin-left: 8px"
+          ></html:input>
+        </hbox>
         <hbox align="center" style="margin-bottom: 8px">
           <label
             for="pref-provider-model"
