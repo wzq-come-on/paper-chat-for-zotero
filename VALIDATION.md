@@ -25,8 +25,8 @@ and `usage_limit_reached`. An earlier attempt also returned a TLS-related 502.
 The completed synthetic-gateway tests do not prove real upstream multi-turn generation.
 Switch the proxy to an account with available quota and rerun the live test.
 
-GitHub fork creation/upload is pending explicit authorization to use the machine's saved
-GitHub credential; no credential is bundled in this source tree or the XPI.
+GitHub destination: https://github.com/wzq-come-on/paper-chat-for-zotero
+No credential is bundled in this source tree or the XPI.
 
 ## Reproduce isolated Zotero tests (Windows)
 

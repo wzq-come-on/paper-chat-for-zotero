@@ -1,6 +1,7 @@
 <h1><img src="addon/content/icons/favicon.svg" width="32" height="32" alt=""> AI Paper Chat — Codex Switch fork</h1>
 
 本 fork 新增 **Codex Switch 本地代理**：模型发现、Responses 流式问答、划词翻译及工具调用。
+下载 [Codex Switch 版 XPI](https://github.com/wzq-come-on/paper-chat-for-zotero/releases/tag/v3.7.1-codex.1)。
 见 [安装、配置与开发说明](CODEX-SWITCH.md)。保留上游作者署名与 AGPL-3.0-or-later 许可。
 本版本已关闭上游自动更新，以保留本地代理适配。以下为原项目介绍。
 
@@ -13,7 +14,7 @@ Read, discuss, and organize research directly in Zotero, with a sidebar or float
 [![Zotero](https://img.shields.io/badge/Zotero-7–10-green?style=flat-square&logo=zotero&logoColor=CC2936)](https://www.zotero.org)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg?style=flat-square)](LICENSE)
 
-[Download](https://github.com/syt2/paper-chat-for-zotero/releases/latest) · [Quick start](#quick-start) · [Report an issue](https://github.com/syt2/paper-chat-for-zotero/issues)
+[Download](https://github.com/wzq-come-on/paper-chat-for-zotero/releases/tag/v3.7.1-codex.1) · [Quick start](#quick-start) · [Report an issue](https://github.com/wzq-come-on/paper-chat-for-zotero/issues)
 
 ## What you can do
 
@@ -38,7 +39,7 @@ Conversations support streaming replies, Markdown, equations, syntax highlightin
 
 Requires **Zotero 7–10**.
 
-1. Download `ai-paper-chat.xpi` from the [latest release](https://github.com/syt2/paper-chat-for-zotero/releases/latest).
+1. Download `ai-paper-chat-codex-switch-3.7.1.xpi` from the [Codex Switch release](https://github.com/wzq-come-on/paper-chat-for-zotero/releases/tag/v3.7.1-codex.1).
 2. In Zotero, open **Tools → Plugins** (called **Add-ons** in some versions).
 3. Click the gear icon, choose **Install Add-on From File…**, and select the downloaded `.xpi`.
 

@@ -1,5 +1,7 @@
 <h1><img src="../addon/content/icons/favicon.svg" width="32" height="32" alt=""> AI Paper Chat</h1>
 
+本 fork 新增 **Codex Switch 本地代理**，见[安装与配置说明](../CODEX-SWITCH.md)。
+
 **AI 论文助手：论文问答、划词翻译、文献检索、笔记与 PPT 生成。**
 
 直接在 Zotero 中阅读、讨论和整理文献，支持侧栏与悬浮聊天窗口。可以使用内置 PaperChat 服务，也可以接入自己的 AI 服务商。
@@ -9,7 +11,7 @@
 [![Zotero](https://img.shields.io/badge/Zotero-7–10-green?style=flat-square&logo=zotero&logoColor=CC2936)](https://www.zotero.org)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg?style=flat-square)](../LICENSE)
 
-[下载安装](https://github.com/syt2/paper-chat-for-zotero/releases/latest) · [快速开始](#快速开始) · [反馈问题](https://github.com/syt2/paper-chat-for-zotero/issues)
+[下载安装](https://github.com/wzq-come-on/paper-chat-for-zotero/releases/tag/v3.7.1-codex.1) · [快速开始](#快速开始) · [反馈问题](https://github.com/wzq-come-on/paper-chat-for-zotero/issues)
 
 ## 可以做什么
 
@@ -34,7 +36,7 @@
 
 支持 **Zotero 7–10**。
 
-1. 从[最新版本](https://github.com/syt2/paper-chat-for-zotero/releases/latest)下载 `ai-paper-chat.xpi`。
+1. 从[Codex Switch 版本](https://github.com/wzq-come-on/paper-chat-for-zotero/releases/tag/v3.7.1-codex.1)下载 `ai-paper-chat-codex-switch-3.7.1.xpi`。
 2. 在 Zotero 中打开 **工具 → 插件**（部分版本称为“附加组件”）。
 3. 点击齿轮图标，选择**从文件安装插件…**，打开下载的 `.xpi` 文件。
 
@@ -79,7 +81,7 @@
 
 ## 反馈
 
-欢迎在 [GitHub Issues](https://github.com/syt2/paper-chat-for-zotero/issues) 反馈问题或提出建议。报告问题时，请附上 Zotero 版本、插件版本、操作系统和复现步骤。
+欢迎在 [GitHub Issues](https://github.com/wzq-come-on/paper-chat-for-zotero/issues) 反馈问题或提出建议。报告问题时，请附上 Zotero 版本、插件版本、操作系统和复现步骤。
 
 ## 许可证与致谢
 
