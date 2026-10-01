@@ -11,7 +11,7 @@
 [![Zotero](https://img.shields.io/badge/Zotero-7–10-green?style=flat-square&logo=zotero&logoColor=CC2936)](https://www.zotero.org)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg?style=flat-square)](../LICENSE)
 
-[下载安装](https://github.com/wzq-come-on/paper-chat-for-zotero/releases/tag/v3.7.1-codex.1) · [快速开始](#快速开始) · [反馈问题](https://github.com/wzq-come-on/paper-chat-for-zotero/issues)
+[下载安装](https://github.com/wzq-come-on/paper-chat-for-zotero/releases/tag/v3.7.2) · [快速开始](#快速开始) · [反馈问题](https://github.com/wzq-come-on/paper-chat-for-zotero/issues)
 
 ## 可以做什么
 
@@ -36,7 +36,7 @@
 
 支持 **Zotero 7–10**。
 
-1. 从[Codex Switch 版本](https://github.com/wzq-come-on/paper-chat-for-zotero/releases/tag/v3.7.1-codex.1)下载 `ai-paper-chat-codex-switch-3.7.1.xpi`。
+1. 从[Codex Switch 版本](https://github.com/wzq-come-on/paper-chat-for-zotero/releases/tag/v3.7.2)下载 `ai-paper-chat-codex-switch-3.7.2.xpi`。
 2. 在 Zotero 中打开 **工具 → 插件**（部分版本称为“附加组件”）。
 3. 点击齿轮图标，选择**从文件安装插件…**，打开下载的 `.xpi` 文件。
 

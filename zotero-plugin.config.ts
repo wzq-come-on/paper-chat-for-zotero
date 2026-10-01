@@ -10,7 +10,6 @@ import {
 import { resolve } from "node:path";
 import { gunzipSync } from "node:zlib";
 import pkg from "./package.json";
-import { XPI_DOWNLOAD_LINK_TEMPLATE } from "./src/utils/updateUrls";
 
 const onlineReleaseUpgradeStage =
   process.env.PAPERCHAT_ONLINE_RELEASE_UPGRADE_STAGE;
@@ -19,6 +18,7 @@ const isOnlineReleaseUpgradeTest =
   onlineReleaseUpgradeStage === "idempotency";
 const isPresentationProbe = process.env.PAPERCHAT_PRESENTATION_PROBE === "1";
 const isCodexProbe = process.env.PAPERCHAT_CODEX_TEST === "1";
+const isInstallProbe = process.env.PAPERCHAT_INSTALL_TEST === "1";
 const presentationProbeOutputPath = resolve(
   ".scaffold/presentation-probe/paperchat-presentation-probe.pptx",
 );
@@ -122,22 +122,12 @@ export default defineConfig({
   name: pkg.config.addonName,
   id: pkg.config.addonID,
   namespace: pkg.config.addonRef,
-  updateURL: "",
-  xpiDownloadLink: XPI_DOWNLOAD_LINK_TEMPLATE,
+  updateURL:
+    "https://raw.githubusercontent.com/wzq-come-on/paper-chat-for-zotero/refs/heads/feat/codex-switch-local/updates.json",
+  xpiDownloadLink:
+    "https://github.com/{{owner}}/{{repo}}/releases/download/v{{version}}/{{xpiName}}-{{version}}.xpi",
 
   build: {
-    hooks: {
-      "build:bundle": () => {
-        // The scaffold injects update_url even if the source manifest omits it.
-        // Its manifest writer is not awaited, so wait until bundling has finished.
-        // Remove it from the final package to keep upstream updates from
-        // silently replacing this fork.
-        const path = resolve(".scaffold/build/addon/manifest.json");
-        const manifest = JSON.parse(readFileSync(path, "utf8"));
-        delete manifest.applications.zotero.update_url;
-        writeFileSync(path, JSON.stringify(manifest, null, 2));
-      },
-    },
     assets: ["addon/**/*.*"],
     define: {
       ...pkg.config,
@@ -190,6 +180,24 @@ export default defineConfig({
 
   test: {
     waitForPlugin: `() => Zotero.${pkg.config.addonInstance}.data.initialized`,
+    ...(isInstallProbe
+      ? {
+          entries: "test-codex-install",
+          startupDelay: 2000,
+          mocha: { timeout: 60000 },
+          prefs: {
+            "extensions.zotero.paperchat.installProbeNewXpi": resolve(
+              ".scaffold/install-probe/release.xpi",
+            ),
+            "extensions.zotero.paperchat.installProbeOldXpi": resolve(
+              ".scaffold/install-probe/missing-update-url.xpi",
+            ),
+            "extensions.zotero.paperchat.installProbeRestoredXpi": resolve(
+              ".scaffold/install-probe/restored-update-url.xpi",
+            ),
+          },
+        }
+      : {}),
     ...(isCodexProbe
       ? {
           entries: "test-codex-zotero",

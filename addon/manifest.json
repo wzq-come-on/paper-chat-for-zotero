@@ -13,6 +13,7 @@
   "applications": {
     "zotero": {
       "id": "__addonID__",
+      "update_url": "https://raw.githubusercontent.com/wzq-come-on/paper-chat-for-zotero/refs/heads/feat/codex-switch-local/updates.json",
       "strict_min_version": "6.999",
       "strict_max_version": "10.*"
     }

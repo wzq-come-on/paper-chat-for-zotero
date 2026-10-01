@@ -1,8 +1,17 @@
-# Validation — 3.7.1-codex.1
+# Validation — 3.7.2
 
 2026-10-01, Windows, upstream commit `8f5a3b2` (Paper Chat 3.7.0).
 
 ## Passed
+
+- 3 permanent-install regression tests in Zotero 10.0.5:
+  - Reproduced the 3.7.1-codex.1 install failure: omitting Zotero's required
+    `applications.zotero.update_url` yields `ERROR_CORRUPT_FILE`.
+  - Restoring only that field makes the same release pass manifest validation.
+  - Installed the exact 3.7.2 production XPI via `AddonManager.getInstallForFile`
+    and `install()`, verified it is active and permanently installed, and opened
+    its real preferences pane to verify the Codex Switch provider.
+  - The update URL now points exclusively to this fork's `updates.json`.
 
 - TypeScript typecheck and ESLint on modified TypeScript files.
 - 76 targeted tests for Codex gateway adaptation, Responses history, stream reconstruction,
@@ -55,3 +64,24 @@ node node_modules/zotero-plugin-scaffold/bin/zotero-plugin.mjs test --exit-on-fi
 
 The test profile/data remain under `.scaffold/test/`. The kill-command override prevents the
 scaffold's fallback from closing unrelated Zotero instances. Stop the synthetic gateway with Ctrl+C.
+
+## Reproduce packaged installation tests
+
+Build a production XPI first, then prepare the test fixtures before the scaffold
+clears its build directory:
+
+```powershell
+$env:NODE_ENV = 'production'
+node node_modules/zotero-plugin-scaffold/bin/zotero-plugin.mjs build
+python scripts/prepare-install-test.py .scaffold/build/ai-paper-chat-codex-switch.xpi
+$env:NODE_ENV = 'test'
+$env:ZOTERO_PLUGIN_ZOTERO_BIN_PATH = 'C:/Program Files/Zotero/zotero.exe'
+$env:ZOTERO_PLUGIN_KILL_COMMAND = 'cmd /c exit 0'
+$env:MOZ_HEADLESS = '1'
+$env:PAPERCHAT_CODEX_TEST = '0'
+$env:PAPERCHAT_INSTALL_TEST = '1'
+node node_modules/zotero-plugin-scaffold/bin/zotero-plugin.mjs test --exit-on-finish
+```
+
+Use the same local Chai preparation shown above. These tests permanently install
+the release only inside `.scaffold/test/`, never inside the user's live profile.
