@@ -10,10 +10,7 @@ import {
 import { resolve } from "node:path";
 import { gunzipSync } from "node:zlib";
 import pkg from "./package.json";
-import {
-  getUpdateURLTemplate,
-  XPI_DOWNLOAD_LINK_TEMPLATE,
-} from "./src/utils/updateUrls";
+import { XPI_DOWNLOAD_LINK_TEMPLATE } from "./src/utils/updateUrls";
 
 const onlineReleaseUpgradeStage =
   process.env.PAPERCHAT_ONLINE_RELEASE_UPGRADE_STAGE;
@@ -125,10 +122,21 @@ export default defineConfig({
   name: pkg.config.addonName,
   id: pkg.config.addonID,
   namespace: pkg.config.addonRef,
-  updateURL: getUpdateURLTemplate(pkg.version),
+  updateURL: "",
   xpiDownloadLink: XPI_DOWNLOAD_LINK_TEMPLATE,
 
   build: {
+    hooks: {
+      "build:makeManifest": () => {
+        // The scaffold injects update_url even if the source manifest omits it.
+        // Remove it from the final package to keep upstream updates from
+        // silently replacing this fork.
+        const path = resolve(".scaffold/build/addon/manifest.json");
+        const manifest = JSON.parse(readFileSync(path, "utf8"));
+        delete manifest.applications.zotero.update_url;
+        writeFileSync(path, JSON.stringify(manifest, null, 2));
+      },
+    },
     assets: ["addon/**/*.*"],
     define: {
       ...pkg.config,
