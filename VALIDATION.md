@@ -16,14 +16,20 @@
   - Rendering, editing and saving the real Zotero preferences pane.
 - The actual Codex Switch `/models?client_version=0.159.1` returned model slugs including `gpt-6.1-sol`.
 - Initial raw `/responses` smoke test returned HTTP 200 and `OK`; `/chat/completions` returned 404.
+- Full production-provider test (`npm run test:codex:live`) passed against the actual
+  Codex Switch loopback proxy, using `gpt-6.1-sol`:
+  - Model discovery and a generation-based connection test.
+  - Streaming Chinese translation: `降水临近预报预测未来几小时内的降雨情况。`
+  - A `read_paper` function call, returning synthetic paper text via a tool result.
+  - A grounded answer identifying the synthetic paper's forecast horizon as 120 minutes.
+  - Multi-turn follow-up in Chinese: `2小时。`
 
-## Still requires verification
+## Proxy account configuration
 
-Full production-provider live test (`npm run test:codex:live`) could not finish:
-the current proxy account returned upstream HTTP 429, `workspace_member_credits_depleted`
-and `usage_limit_reached`. An earlier attempt also returned a TLS-related 502.
-The completed synthetic-gateway tests do not prove real upstream multi-turn generation.
-Switch the proxy to an account with available quota and rerun the live test.
+The local proxy's default account is the account selected in Switch's account-management
+page, independent of the GUI chat account. Selecting an account with quota in
+`账户管理 → 官方账户 → 当前账户` resolved the upstream 429 and allowed the full live test to pass.
+The live check uses synthetic text and does not upload library data or real PDFs.
 
 GitHub destination: https://github.com/wzq-come-on/paper-chat-for-zotero
 No credential is bundled in this source tree or the XPI.
