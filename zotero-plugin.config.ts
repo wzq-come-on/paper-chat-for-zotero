@@ -127,8 +127,9 @@ export default defineConfig({
 
   build: {
     hooks: {
-      "build:makeManifest": () => {
+      "build:bundle": () => {
         // The scaffold injects update_url even if the source manifest omits it.
+        // Its manifest writer is not awaited, so wait until bundling has finished.
         // Remove it from the final package to keep upstream updates from
         // silently replacing this fork.
         const path = resolve(".scaffold/build/addon/manifest.json");
