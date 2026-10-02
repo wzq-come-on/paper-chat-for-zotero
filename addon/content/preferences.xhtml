@@ -813,6 +813,151 @@
     </html:details>
   </groupbox>
 
+  <!-- Voice Input Settings -->
+  <groupbox style="margin-top: 16px">
+    <label><html:h3 data-l10n-id="pref-voice-settings"></html:h3></label>
+    <label
+      data-l10n-id="pref-voice-description"
+      style="font-size: 11px; color: #666; margin: 4px 0 10px 2px"
+    ></label>
+
+    <hbox align="center" style="margin-bottom: 8px">
+      <label
+        for="pref-speech-mode"
+        data-l10n-id="pref-voice-mode"
+        style="width: 90px; text-align: right"
+      ></label>
+      <menulist id="pref-speech-mode" style="flex: 1; margin-left: 8px">
+        <menupopup id="pref-speech-mode-popup">
+          <menuitem
+            value="codex-native"
+            data-l10n-id="pref-voice-mode-native"
+          ></menuitem>
+          <menuitem
+            value="local"
+            data-l10n-id="pref-voice-mode-local"
+          ></menuitem>
+          <menuitem
+            value="codex-switch"
+            data-l10n-id="pref-voice-mode-codex"
+          ></menuitem>
+          <menuitem
+            value="custom-remote"
+            data-l10n-id="pref-voice-mode-remote"
+          ></menuitem>
+          <menuitem
+            value="system"
+            data-l10n-id="pref-voice-mode-system"
+          ></menuitem>
+        </menupopup>
+      </menulist>
+    </hbox>
+
+    <label
+      id="pref-voice-mode-help"
+      style="font-size: 11px; color: #666; margin: 0 0 8px 100px"
+    ></label>
+
+    <vbox id="pref-voice-local-fields">
+      <hbox align="center" style="margin-bottom: 8px">
+        <label
+          for="pref-speech-local-url"
+          data-l10n-id="pref-voice-local-url"
+          style="width: 90px; text-align: right"
+        ></label>
+        <html:input
+          id="pref-speech-local-url"
+          type="url"
+          style="flex: 1; margin-left: 8px; min-width: 180px"
+        ></html:input>
+      </hbox>
+      <hbox align="center" style="margin-bottom: 8px">
+        <label
+          for="pref-speech-local-model"
+          data-l10n-id="pref-voice-model"
+          style="width: 90px; text-align: right"
+        ></label>
+        <html:input
+          id="pref-speech-local-model"
+          type="text"
+          style="flex: 1; margin-left: 8px; min-width: 180px"
+        ></html:input>
+      </hbox>
+    </vbox>
+
+    <vbox id="pref-voice-remote-fields" hidden="true">
+      <hbox align="center" style="margin-bottom: 8px">
+        <label
+          for="pref-speech-remote-model"
+          data-l10n-id="pref-voice-model"
+          style="width: 90px; text-align: right"
+        ></label>
+        <html:input
+          id="pref-speech-remote-model"
+          type="text"
+          style="flex: 1; margin-left: 8px; min-width: 180px"
+        ></html:input>
+      </hbox>
+      <hbox align="center" style="margin-bottom: 8px">
+        <label
+          for="pref-speech-remote-url"
+          data-l10n-id="pref-voice-remote-url"
+          style="width: 90px; text-align: right"
+        ></label>
+        <html:input
+          id="pref-speech-remote-url"
+          type="url"
+          style="flex: 1; margin-left: 8px; min-width: 180px"
+        ></html:input>
+      </hbox>
+      <hbox align="center" style="margin-bottom: 8px">
+        <label
+          for="pref-speech-remote-key"
+          data-l10n-id="pref-voice-remote-key"
+          style="width: 90px; text-align: right"
+        ></label>
+        <html:input
+          id="pref-speech-remote-key"
+          type="password"
+          style="flex: 1; margin-left: 8px; min-width: 180px"
+        ></html:input>
+      </hbox>
+    </vbox>
+
+    <vbox id="pref-voice-native-fields" hidden="true">
+      <hbox align="center" style="margin-bottom: 8px">
+        <label
+          for="pref-speech-codex-root"
+          data-l10n-id="pref-voice-codex-root"
+          style="width: 90px; text-align: right"
+        ></label>
+        <html:input
+          id="pref-speech-codex-root"
+          type="text"
+          data-l10n-id="pref-voice-codex-root-placeholder"
+          style="flex: 1; margin-left: 8px; min-width: 180px"
+        ></html:input>
+      </hbox>
+    </vbox>
+    <hbox align="center" style="margin-bottom: 4px">
+      <label
+        for="pref-speech-language"
+        data-l10n-id="pref-voice-language"
+        style="width: 90px; text-align: right"
+      ></label>
+      <html:input
+        id="pref-speech-language"
+        type="text"
+        placeholder="auto"
+        style="flex: 1; margin-left: 8px; min-width: 180px"
+      ></html:input>
+    </hbox>
+    <label
+      data-l10n-id="pref-voice-language-help"
+      style="font-size: 11px; color: #666; margin-left: 100px"
+    ></label>
+  </groupbox>
+
   <!-- Reading Loop Settings -->
   <groupbox style="margin-top: 16px">
     <label><html:h3 data-l10n-id="pref-reading-loop-settings"></html:h3></label>

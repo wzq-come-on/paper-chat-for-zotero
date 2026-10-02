@@ -57,3 +57,11 @@ pref("agentMaxPlanningIterations", 30); // 单个 agent turn 的最大 planning 
 pref("translationModel", "auto");
 
 pref("translationLanguage", "auto");
+pref("speechTranscriptionMode", "codex-native");
+pref("speechLocalBaseUrl", "http://127.0.0.1:9000/v1");
+pref("speechLocalModel", "whisper-1");
+pref("speechRemoteBaseUrl", "https://api.openai.com/v1");
+pref("speechRemoteApiKey", "");
+pref("speechRemoteModel", "gpt-4o-mini-transcribe");
+pref("speechCodexSwitchRoot", "");
+pref("speechLanguage", "");

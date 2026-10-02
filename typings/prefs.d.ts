@@ -48,6 +48,14 @@ declare namespace _ZoteroTypes {
       "agentMaxPlanningIterations": number;
       "translationModel": string;
       "translationLanguage": string;
+      "speechTranscriptionMode": string;
+      "speechLocalBaseUrl": string;
+      "speechLocalModel": string;
+      "speechRemoteBaseUrl": string;
+      "speechRemoteApiKey": string;
+      "speechRemoteModel": string;
+      "speechCodexSwitchRoot": string;
+      "speechLanguage": string;
     };
   }
 }

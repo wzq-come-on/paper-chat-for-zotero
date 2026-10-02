@@ -116,6 +116,35 @@ pref-model-exists = 该模型已存在
 
 # AI Tools Settings
 pref-ai-tools-settings = AI 工具设置
+
+# 语音输入设置
+pref-voice-settings = 语音输入
+pref-voice-description = 录音识别后填入输入框，编辑确认后自行发送。默认复用 Codex 登录；也可选择本地或远程识别。
+pref-voice-mode-native =
+    .label = Codex 原生听写（复用登录账号）
+pref-voice-help-native = 使用 Switch 默认 Codex Home 的 ChatGPT 登录，不需额外 API Key 或本地模型。语音发往 OpenAI；最长录音 2 分钟。
+pref-voice-codex-root = Switch 数据目录
+pref-voice-codex-root-placeholder =
+    .placeholder = 自动检测，通常留空
+pref-voice-mode = 识别方式
+pref-voice-mode-local =
+    .label = 本地 Whisper 服务
+pref-voice-mode-codex =
+    .label = 标准音频代理（高级）
+pref-voice-mode-remote =
+    .label = 自定义远程 API
+pref-voice-mode-system =
+    .label = 系统语音识别
+pref-voice-help-local = 需要本地 Whisper 兼容服务，默认地址：http://127.0.0.1:9000/v1
+pref-voice-help-codex = 要求代理提供 /audio/transcriptions。当前 Switch 未提供该路由时，请选择 Codex 原生听写。
+pref-voice-help-remote = 使用兼容 OpenAI 的 /audio/transcriptions 接口和下方密钥。
+pref-voice-help-system = 使用 Zotero 运行环境提供的语音识别，是否可用取决于系统和语言包。
+pref-voice-local-url = 本地地址
+pref-voice-remote-url = 远程地址
+pref-voice-remote-key = 远程 API 密钥
+pref-voice-model = 模型
+pref-voice-language = 语言
+pref-voice-language-help = 留空自动识别，例如：zh、en。
 pref-agent-max-planning-iterations = 最大规划轮次
 pref-agent-max-planning-iterations-desc = 单个 agent 回复内允许的最大 planning iterations。到最后 1 轮时将强制停止继续调工具并直接总结输出。
 pref-context-auto-compact-threshold = 上下文压缩

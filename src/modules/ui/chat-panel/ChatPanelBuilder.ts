@@ -1089,8 +1089,35 @@ export function createChatContainer(
   sendIcon.src = `chrome://${config.addonRef}/content/icons/send.svg`;
   sendButton.appendChild(sendIcon);
 
+  // Voice input button. The controller chooses recording, local Whisper,
+  // Codex Switch, or system recognition from preferences at click time.
+  const voiceButton = createElement(
+    doc,
+    "button",
+    {
+      width: "32px",
+      height: "32px",
+      background: "transparent",
+      color: theme.textSecondary,
+      border: "none",
+      borderRadius: "50%",
+      cursor: "pointer",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      flexShrink: "0",
+      padding: "0",
+      fontSize: "16px",
+    },
+    { id: "chat-voice-button", type: "button", "aria-pressed": "false" },
+  );
+  voiceButton.textContent = "🎙";
+  voiceButton.title = getString("chat-voice-start");
+  voiceButton.setAttribute("aria-label", getString("chat-voice-start"));
+
   inputBottomBar.appendChild(toolsMenu);
   inputBottomBar.appendChild(modelSelectorContainer);
+  inputBottomBar.appendChild(voiceButton);
   inputBottomBar.appendChild(sendButton);
   leftContainer.appendChild(accountArea);
   leftContainer.appendChild(utilityActions);

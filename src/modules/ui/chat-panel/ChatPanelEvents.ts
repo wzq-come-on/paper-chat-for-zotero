@@ -21,6 +21,7 @@ import {
 import { showAuthDialog } from "../AuthDialog";
 import { getCurrentPresentationPaper } from "../../presentation/PresentationEntry";
 import { getString } from "../../../utils/locale";
+import { getVoiceErrorMessage } from "../../../utils/voiceError";
 import { attachQuickPhrasesMenu } from "./QuickPhrasesMenu";
 import { getProviderManager } from "../../providers";
 import type { PaperChatProviderConfig } from "../../../types/provider";
@@ -60,6 +61,10 @@ import { startReaderFigureScreenshot } from "../ReaderFigureScreenshot";
 import { updateAnimatedBalance } from "./AnimatedBalance";
 import { ConversationNavigator } from "./ConversationNavigator";
 import { dispatchInputEvent } from "./InputEvents";
+import {
+  appendVoiceTranscript,
+  attachVoiceInput,
+} from "./VoiceInputController";
 import { setupLocalFileAttachments } from "./LocalFileAttachments";
 import {
   bindAttachmentImagePreview,
@@ -781,6 +786,9 @@ export function setupEventHandlers(context: ChatPanelContext): () => void {
   const sendButton = container.querySelector(
     "#chat-send-button",
   ) as HTMLButtonElement;
+  const voiceButton = container.querySelector(
+    "#chat-voice-button",
+  ) as HTMLButtonElement | null;
   const newChatBtn = container.querySelector("#chat-new") as HTMLButtonElement;
   const uploadFileBtn = container.querySelector(
     "#chat-upload-file",
@@ -831,6 +839,33 @@ export function setupEventHandlers(context: ChatPanelContext): () => void {
   const turnQueue = container.querySelector(
     "#chat-turn-queue",
   ) as HTMLElement | null;
+
+  if (voiceButton && messageInput) {
+    try {
+      disposers.push(
+        attachVoiceInput({
+          button: voiceButton,
+          input: messageInput,
+          onTranscript: (text) => {
+            appendVoiceTranscript(messageInput, text);
+            resizeMessageInput(messageInput, chatHistory);
+            syncSendButtonState(sendButton, chatManager);
+          },
+          onError: (error) => {
+            context.appendError(
+              getVoiceErrorMessage(error, getString("chat-voice-failed")),
+            );
+          },
+        }),
+      );
+    } catch (error) {
+      // Voice is optional. A recording API failure must never interrupt the
+      // remaining model-selector, send-button and keyboard event bindings.
+      voiceButton.disabled = true;
+      voiceButton.title = getString("chat-voice-recorder-unavailable");
+      ztoolkit.log("[Voice] Initialization failed:", error);
+    }
+  }
 
   let displayedRunningSessionId: string | null = null;
   disposers.push(

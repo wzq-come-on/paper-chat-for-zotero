@@ -116,6 +116,35 @@ pref-model-exists = Model already exists
 
 # AI Tools Settings
 pref-ai-tools-settings = AI Tools Settings
+
+# Voice Input Settings
+pref-voice-settings = Voice Input
+pref-voice-description = Speech becomes an editable draft. Reuse your Codex login, or choose local or remote recognition.
+pref-voice-mode-native =
+    .label = Codex native dictation (reuse login)
+pref-voice-help-native = Uses the ChatGPT login in Switch's default Codex Home. No extra API key or local model. Audio is sent to OpenAI. Recordings are limited to 2 minutes.
+pref-voice-codex-root = Switch data folder
+pref-voice-codex-root-placeholder =
+    .placeholder = Detected automatically; usually leave blank
+pref-voice-mode = Recognition mode
+pref-voice-mode-local =
+    .label = Local Whisper server
+pref-voice-mode-codex =
+    .label = Standard audio proxy (advanced)
+pref-voice-mode-remote =
+    .label = Custom remote API
+pref-voice-mode-system =
+    .label = System speech recognition
+pref-voice-help-local = Requires a local Whisper-compatible server. Default: http://127.0.0.1:9000/v1
+pref-voice-help-codex = Requires /audio/transcriptions. Select native dictation if Switch does not expose this route.
+pref-voice-help-remote = Uses an OpenAI-compatible /audio/transcriptions endpoint and the key below.
+pref-voice-help-system = Uses the speech-recognition service exposed by the Zotero runtime. Availability depends on the operating system and language pack.
+pref-voice-local-url = Local URL
+pref-voice-remote-url = Remote URL
+pref-voice-remote-key = Remote API key
+pref-voice-model = Model
+pref-voice-language = Language
+pref-voice-language-help = Leave blank for automatic detection; examples: zh, en.
 pref-agent-max-planning-iterations = Max planning iterations
 pref-agent-max-planning-iterations-desc = Maximum planning iterations allowed inside a single agent response. On the final iteration, tool use is disabled and the model must synthesize a final answer.
 pref-context-auto-compact-threshold = Context compression

@@ -25,7 +25,38 @@
 升级不会自动切换当前提供商。回退时重新安装原版 XPI 即可。
 保留 Zotero 必填的更新地址，指向本 fork 的 updates.json；原版插件内的自行更新已关闭，后续更新由本 fork 提供。
 
-## 兼容实现
+## 语音输入（3.7.8）
+
+3.7.8 同样为原生听写 app-server 提供错误输出管道，修复普通桌面启动 Zotero
+后转写阶段的 `File closed`。语音错误现在保留 Firefox 工作线程返回的消息和
+错误码，避免显示 `[object Object]`；升级后请正常重启 Zotero。
+
+3.7.7 修复 Windows 图形界面启动 Zotero 时录音组件提前退出的问题。
+PowerShell 的错误输出现在通过独立管道接收，并关闭 Windows Runtime 初始化的进度输出。
+不再把组件启动失败笼统提示成设备被占用；升级后请正常重启 Zotero。
+
+3.7.6 修复了 3.7.5 在 Zotero 插件脚本环境中初始化语音失败，导致模型选择和发送事件未绑定的问题。
+语音所需的 Web API 构造器从 Zotero 窗口获取；语音初始化异常也不会中断文字聊天。
+从 3.7.5 升级后请正常重启 Zotero，让已经加载的旧插件代码退出。
+
+「设置 → Paper Chat → 语音输入」默认选择 **Codex 原生听写（复用登录账号）**。
+保持 Switch 默认 Codex Home 的 ChatGPT 登录有效；不需要额外 API Key，也不需要本地识别模型。
+点击输入框旁的麦克风开始录音，再点击停止并转写。结果仅填入草稿，由用户编辑后发送。
+录音最长 2 分钟；也可选择本地 Whisper 服务或自定义远程语音 API。
+
+Windows 使用随插件提供的轻量系统录音组件，解决 Zotero 10 的
+`getUserMedia` 设备初始化失败。组件仅在点击麦克风后启动，检查 Windows
+原生麦克风许可，不改变系统权限；停止或关闭面板后退出并清理临时录音。
+无需安装录音软件或下载识别模型。其他平台仍使用运行环境的 MediaRecorder。
+
+原生听写使用官方桌面端的账号认证与 `/backend-api/transcribe` 路径。
+插件临时启动已安装的 app-server，通过 `getAuthStatus` 取认证并通过 `account/read` 取得工作区路由；
+访问令牌仅在内存中使用，退出后关闭子进程。网络设置沿用 Switch，并只应用到听写请求。
+Switch 数据目录通常自动检测，安装目录自定义时可在语音设置中指定。
+此模式使用 Switch 默认 Codex Home 的登录，GUI 会话独立选择的账号不改变这个登录。
+桌面端内部路由可能随官方版本变化，需要随版本维护。
+
+## 文字兼容实现
 
 - `/models?client_version=...`：适配 Codex 的 `models[].slug`，也兼容标准 `data[].id`。
 - `/responses`：将插件现有对话、图片和工具调用转换为 Responses 协议。

@@ -44,6 +44,11 @@ import { ANALYTICS_EVENTS, getAnalyticsService } from "../analytics";
 import { refreshPaperChatNoticeUI } from "./PaperChatNoticeRenderer";
 import { getReadingLoopService } from "../reading-loop";
 import { applyReaderSelectionEntryPreference } from "../ui/ReaderChatEntry";
+import {
+  getSpeechTranscriptionSettings,
+  speechTranscriptionDefaults,
+  type SpeechTranscriptionMode,
+} from "./SpeechTranscriptionService";
 
 // Current selected provider ID
 let currentProviderId: string = "paperchat";
@@ -190,6 +195,9 @@ export async function refreshPrefsUI(
   // Initialize Reading Loop settings checkbox
   initReadingLoopSettings(doc);
 
+  // Initialize voice input settings
+  initVoiceSettings(doc);
+
   // Initialize reader selection entry settings checkbox
   initReaderSelectionEntrySettings(doc);
 
@@ -314,6 +322,9 @@ export function bindPrefEvents(): void {
   // Bind Reading Loop settings checkbox event
   bindReadingLoopSettingsEvent(doc);
 
+  // Bind voice input settings events
+  bindVoiceSettingsEvents(doc);
+
   // Bind reader selection entry settings checkbox event
   bindReaderSelectionEntrySettingsEvent(doc);
 
@@ -369,6 +380,149 @@ function initReadingLoopSettings(doc: Document): void {
   if (enabledCheckbox) {
     enabledCheckbox.checked = getPref("readingLoopEnabled") !== false;
   }
+}
+
+function voiceModeHelpKey(mode: SpeechTranscriptionMode): string {
+  switch (mode) {
+    case "codex-native":
+      return "pref-voice-help-native";
+    case "local":
+      return "pref-voice-help-local";
+    case "codex-switch":
+      return "pref-voice-help-codex";
+    case "custom-remote":
+      return "pref-voice-help-remote";
+    case "system":
+      return "pref-voice-help-system";
+  }
+}
+
+function updateVoiceSettingsVisibility(
+  doc: Document,
+  mode: SpeechTranscriptionMode,
+): void {
+  const localFields = doc.getElementById("pref-voice-local-fields");
+  const remoteFields = doc.getElementById("pref-voice-remote-fields");
+  const nativeFields = doc.getElementById("pref-voice-native-fields");
+  const help = doc.getElementById("pref-voice-mode-help");
+  if (localFields) localFields.hidden = mode !== "local";
+  if (remoteFields) remoteFields.hidden = mode !== "custom-remote";
+  if (nativeFields) nativeFields.hidden = mode !== "codex-native";
+  if (help) {
+    help.setAttribute("data-l10n-id", voiceModeHelpKey(mode));
+    void doc.l10n?.translateElements([help]);
+  }
+}
+
+function initVoiceSettings(doc: Document): void {
+  const modeSelect = doc.getElementById(
+    "pref-speech-mode",
+  ) as XULMenuListElement | null;
+  const localUrl = doc.getElementById(
+    "pref-speech-local-url",
+  ) as HTMLInputElement | null;
+  const localModel = doc.getElementById(
+    "pref-speech-local-model",
+  ) as HTMLInputElement | null;
+  const remoteUrl = doc.getElementById(
+    "pref-speech-remote-url",
+  ) as HTMLInputElement | null;
+  const remoteKey = doc.getElementById(
+    "pref-speech-remote-key",
+  ) as HTMLInputElement | null;
+  const language = doc.getElementById(
+    "pref-speech-language",
+  ) as HTMLInputElement | null;
+  const settings = getSpeechTranscriptionSettings();
+  if (modeSelect) modeSelect.value = settings.mode;
+  if (localUrl)
+    localUrl.value =
+      settings.localBaseUrl || speechTranscriptionDefaults.localBaseUrl;
+  if (localModel)
+    localModel.value =
+      settings.localModel || speechTranscriptionDefaults.localModel;
+  if (remoteUrl)
+    remoteUrl.value =
+      settings.remoteBaseUrl || speechTranscriptionDefaults.remoteBaseUrl;
+  if (remoteKey) remoteKey.value = settings.remoteApiKey;
+  const remoteModel = doc.getElementById(
+    "pref-speech-remote-model",
+  ) as HTMLInputElement | null;
+  if (remoteModel) remoteModel.value = settings.remoteModel;
+  const switchRoot = doc.getElementById(
+    "pref-speech-codex-root",
+  ) as HTMLInputElement | null;
+  if (switchRoot)
+    switchRoot.value = String(getPref("speechCodexSwitchRoot") || "");
+  if (language) language.value = settings.language;
+  updateVoiceSettingsVisibility(doc, settings.mode);
+}
+
+function bindVoiceSettingsEvents(doc: Document): void {
+  const modeSelect = doc.getElementById(
+    "pref-speech-mode",
+  ) as XULMenuListElement | null;
+  const localUrl = doc.getElementById(
+    "pref-speech-local-url",
+  ) as HTMLInputElement | null;
+  const localModel = doc.getElementById(
+    "pref-speech-local-model",
+  ) as HTMLInputElement | null;
+  const remoteUrl = doc.getElementById(
+    "pref-speech-remote-url",
+  ) as HTMLInputElement | null;
+  const remoteKey = doc.getElementById(
+    "pref-speech-remote-key",
+  ) as HTMLInputElement | null;
+  const language = doc.getElementById(
+    "pref-speech-language",
+  ) as HTMLInputElement | null;
+
+  modeSelect?.addEventListener("command", () => {
+    const value = modeSelect.value as SpeechTranscriptionMode;
+    const mode: SpeechTranscriptionMode = [
+      "codex-native",
+      "local",
+      "codex-switch",
+      "custom-remote",
+      "system",
+    ].includes(value)
+      ? value
+      : "codex-native";
+    setPref("speechTranscriptionMode", mode);
+    updateVoiceSettingsVisibility(doc, mode);
+  });
+
+  const bindInput = (
+    input: HTMLInputElement | null,
+    key:
+      | "speechLocalBaseUrl"
+      | "speechLocalModel"
+      | "speechRemoteBaseUrl"
+      | "speechRemoteApiKey"
+      | "speechRemoteModel"
+      | "speechCodexSwitchRoot"
+      | "speechLanguage",
+  ): void => {
+    if (!input) return;
+    const persist = (): void => setPref(key, input.value.trim());
+    input.addEventListener("change", persist);
+    input.addEventListener("blur", persist);
+  };
+
+  bindInput(localUrl, "speechLocalBaseUrl");
+  bindInput(localModel, "speechLocalModel");
+  bindInput(remoteUrl, "speechRemoteBaseUrl");
+  bindInput(remoteKey, "speechRemoteApiKey");
+  bindInput(
+    doc.getElementById("pref-speech-remote-model") as HTMLInputElement | null,
+    "speechRemoteModel",
+  );
+  bindInput(
+    doc.getElementById("pref-speech-codex-root") as HTMLInputElement | null,
+    "speechCodexSwitchRoot",
+  );
+  bindInput(language, "speechLanguage");
 }
 
 export function applyReadingLoopEnabledPreference(enabled: boolean): void {

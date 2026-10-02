@@ -18,6 +18,8 @@ const isOnlineReleaseUpgradeTest =
   onlineReleaseUpgradeStage === "idempotency";
 const isPresentationProbe = process.env.PAPERCHAT_PRESENTATION_PROBE === "1";
 const isCodexProbe = process.env.PAPERCHAT_CODEX_TEST === "1";
+const isVoiceProbe = process.env.PAPERCHAT_VOICE_TEST === "1";
+const isVoiceCaptureProbe = process.env.PAPERCHAT_VOICE_CAPTURE_TEST === "1";
 const isInstallProbe = process.env.PAPERCHAT_INSTALL_TEST === "1";
 const presentationProbeOutputPath = resolve(
   ".scaffold/presentation-probe/paperchat-presentation-probe.pptx",
@@ -141,6 +143,20 @@ export default defineConfig({
       prefix: pkg.config.prefsPrefix,
     },
     esbuildOptions: [
+      ...(isVoiceProbe
+        ? [
+            {
+              entryPoints: ["test-voice-zotero/sandbox-entry.ts"],
+              bundle: true,
+              format: "iife" as const,
+              globalName: "PaperChatVoiceProbe",
+              target: "firefox115",
+              define: { __env__: '"test"' },
+              outfile:
+                ".scaffold/build/addon/content/scripts/voice-sandbox-probe.js",
+            },
+          ]
+        : []),
       {
         entryPoints: ["src/modules/ui/chat-panel/number-flow-entry.ts"],
         bundle: true,
@@ -180,6 +196,46 @@ export default defineConfig({
 
   test: {
     waitForPlugin: `() => Zotero.${pkg.config.addonInstance}.data.initialized`,
+    ...(isVoiceCaptureProbe
+      ? {
+          entries: "test-voice-capture",
+          startupDelay: 2000,
+          mocha: { timeout: 60000 },
+          prefs: {
+            "extensions.zotero.paperchat.guideShown": true,
+            "extensions.zotero.paperchat.nextQuestionHintEnabled": false,
+            "extensions.zotero.paperchat.providersConfig": JSON.stringify({
+              activeProviderId: "codex-switch",
+              providers: [
+                {
+                  id: "paperchat",
+                  name: "PaperChat",
+                  type: "paperchat",
+                  enabled: false,
+                  isBuiltin: true,
+                  order: 1,
+                  availableModels: [],
+                },
+                {
+                  id: "codex-switch",
+                  name: "Synthetic Codex",
+                  type: "custom",
+                  apiProtocol: "codex-switch",
+                  enabled: true,
+                  isBuiltin: true,
+                  order: 0,
+                  apiKey: "",
+                  baseUrl: "http://127.0.0.1:18741/v1",
+                  defaultModel: "synthetic-codex",
+                  availableModels: ["synthetic-codex"],
+                  maxTokens: 8192,
+                  temperature: 0.7,
+                },
+              ],
+            }),
+          },
+        }
+      : {}),
     ...(isInstallProbe
       ? {
           entries: "test-codex-install",
@@ -203,6 +259,20 @@ export default defineConfig({
           entries: "test-codex-zotero",
           startupDelay: 2000,
           mocha: { timeout: 20000 },
+        }
+      : {}),
+    ...(isVoiceProbe
+      ? {
+          entries: "test-voice-zotero",
+          startupDelay: 2000,
+          mocha: { timeout: 120000 },
+          prefs: {
+            "extensions.zotero.paperchat.voiceProbeAudio":
+              process.env.PAPERCHAT_VOICE_AUDIO || "",
+            "extensions.zotero.paperchat.speechTranscriptionMode":
+              "codex-native",
+            "extensions.zotero.paperchat.speechLanguage": "en",
+          },
         }
       : {}),
     ...(isOnlineReleaseUpgradeTest

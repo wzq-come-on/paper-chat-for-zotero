@@ -1537,6 +1537,7 @@ async function initializeChatContentCommon(
   container: HTMLElement,
 ): Promise<void> {
   readyPanelContainers.delete(container);
+  container.dataset.chatReady = "false";
   const authManager = getAuthManager();
   const context = createContext(container);
   const messageInput = container.querySelector(
@@ -1626,6 +1627,7 @@ async function initializeChatContentCommon(
 
   focusInput(container);
   readyPanelContainers.add(container);
+  container.dataset.chatReady = "true";
   await flushPendingPanelReadyAction();
 }
 

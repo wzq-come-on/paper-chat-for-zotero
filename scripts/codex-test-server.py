@@ -28,7 +28,7 @@ class Gateway(BaseHTTPRequestHandler):
             self.send_error(400, 'invalid Codex request')
             return
         events = [{'type': 'response.created', 'response': {'id': 'resp_synthetic', 'store': False}}]
-        if body.get('tools') and not any(i.get('type') == 'function_call_output' for i in body['input']):
+        if body.get('tools') and 'UI chat regression' not in json.dumps(body) and not any(i.get('type') == 'function_call_output' for i in body['input']):
             item = {'type': 'function_call', 'id': 'fc_synthetic', 'call_id': 'call_synthetic', 'name': 'read_paper', 'arguments': '{}'}
             events.append({'type': 'response.output_item.added', 'output_index': 0, 'item': item})
         else:
