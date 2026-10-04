@@ -12,6 +12,10 @@ import {
 } from "./PaperchatProviderUI";
 import { bindApiKeyEvents } from "./ApiKeyProviderUI";
 import {
+  autofillSwitchRootInput,
+  persistSwitchRootInput,
+} from "./CodexSwitchRootInput";
+import {
   populateProviderList,
   selectProvider,
   populateActiveProviderDropdown,
@@ -452,8 +456,11 @@ function initVoiceSettings(doc: Document): void {
   const switchRoot = doc.getElementById(
     "pref-speech-codex-root",
   ) as HTMLInputElement | null;
-  if (switchRoot)
+  if (switchRoot) {
     switchRoot.value = String(getPref("speechCodexSwitchRoot") || "");
+    delete switchRoot.dataset.detectedRoot;
+    void autofillSwitchRootInput(switchRoot).catch(() => {});
+  }
   if (language) language.value = settings.language;
   updateVoiceSettingsVisibility(doc, settings.mode);
 }
@@ -518,10 +525,17 @@ function bindVoiceSettingsEvents(doc: Document): void {
     doc.getElementById("pref-speech-remote-model") as HTMLInputElement | null,
     "speechRemoteModel",
   );
-  bindInput(
-    doc.getElementById("pref-speech-codex-root") as HTMLInputElement | null,
-    "speechCodexSwitchRoot",
-  );
+  const switchRoot = doc.getElementById(
+    "pref-speech-codex-root",
+  ) as HTMLInputElement | null;
+  if (switchRoot) {
+    switchRoot.addEventListener("change", () =>
+      persistSwitchRootInput(switchRoot),
+    );
+    switchRoot.addEventListener("blur", () =>
+      persistSwitchRootInput(switchRoot),
+    );
+  }
   bindInput(language, "speechLanguage");
 }
 

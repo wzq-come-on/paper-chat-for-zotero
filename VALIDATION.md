@@ -1,4 +1,44 @@
-# Validation — 3.7.8
+# Validation — 3.7.9
+
+## Automatic Switch setup — 3.7.9 (2026-10-04)
+
+- Installation discovery reads Switch data-directory and CLI package metadata.
+  It respects a configured CLI, falls back to the newest complete managed CLI,
+  and ignores Desktop-app executables such as ChatGPT.exe. It does not run
+  executables or open account/auth files to discover versions.
+- Node regressions: **82 passed**, including Windows/macOS/Linux data-directory
+  discovery, XDG overrides, numeric version ordering, incomplete downloads,
+  active CLI precedence, custom directories, missing/corrupt metadata, manual
+  overrides, Responses/tool streams, translation routing and voice error display.
+- Isolated Zotero 10.0.5 production-settings regressions: **7 passed**. The actual
+  plugin pane detected CLI 0.160.0, populated version/root, persisted automatic
+  version mode, kept the root automatic on blur, preserved manual edits and
+  remote-endpoint versions, and restored automatic detection when requested.
+  A new custom provider also filled its empty local address and enabled version
+  detection when its protocol was switched to Codex Switch.
+  The model request used the detected version and the real local proxy returned
+  its model list without an API key.
+- Native dictation regressions: **4 passed**. A synthetic speech WAV passed
+  through the Windows helper and the automatically discovered CLI's native
+  authentication/transcription flow into an editable test composer. No live
+  microphone audio or real paper was captured or sent.
+- Windows installation paths and UI were tested in Zotero. macOS/Linux paths
+  have automated fixture coverage; their recording and native dictation remain
+  unverified on physical machines.
+- Packaged release installation: **3 passed**. The exact production XPI was
+  permanently installed in the isolated profile, started in production mode
+  and exposed Codex Switch in its settings. Manifest compatibility/update_url
+  checks passed. TypeScript, changed-file ESLint and production build passed.
+- Release XPI SHA-256:
+  `fbd26ab8ddd6876b061d3d7a4f9da048f956cfe655428d5c588079a989f96eed`.
+- While the user's Zotero was closed, backed up the existing plugin and copied
+  this production XPI into its existing profile and Downloads. Both copies match
+  the release hash; that profile will load the new version on its next launch.
+
+Reproduce settings/model discovery with `PAPERCHAT_SWITCH_DISCOVERY_TEST=1`,
+`ZOTERO_PLUGIN_ZOTERO_BIN_PATH` set to the installed Zotero executable, and
+`zotero-plugin test --no-watch --exit-on-finish`. This opt-in probe requires a
+local Switch installation and running proxy; it uses an isolated Zotero profile.
 
 ## Native dictation GUI process repair — 3.7.8 (2026-10-02)
 

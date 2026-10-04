@@ -9,9 +9,73 @@ import type { ApiKeyProviderConfig } from "../../types/provider";
 import { clearElement, showTestResult } from "./utils";
 import {
   CODEX_CLIENT_VERSION,
+  CODEX_SWITCH_BASE_URL,
   isCodexSwitchConfig,
   isLoopbackUrl,
+  usesAutomaticCodexVersion,
 } from "../providers/CodexSwitchProvider";
+import {
+  discoverCodexSwitchInstallation,
+  getConfiguredSwitchRoot,
+} from "../providers/CodexSwitchDiscovery";
+
+const versionDetectionTickets = new WeakMap<Document, symbol>();
+
+export async function autofillCodexSwitchVersion(
+  doc: Document,
+  config: ApiKeyProviderConfig,
+): Promise<void> {
+  const ticket = Symbol();
+  versionDetectionTickets.set(doc, ticket);
+  const automatic = doc.getElementById(
+    "pref-provider-auto-version",
+  ) as XUL.Checkbox | null;
+  const input = doc.getElementById(
+    "pref-provider-client-version",
+  ) as HTMLInputElement | null;
+  const status = doc.getElementById("pref-provider-version-status");
+  if (status) status.textContent = "";
+  if (
+    !isCodexSwitchConfig(config) ||
+    !usesAutomaticCodexVersion(config) ||
+    !isLoopbackUrl(config.baseUrl)
+  )
+    return;
+  const root = getConfiguredSwitchRoot();
+  const installation = await discoverCodexSwitchInstallation(root);
+  // Provider changes or manual edits during discovery must win.
+  if (
+    versionDetectionTickets.get(doc) !== ticket ||
+    !automatic?.checked ||
+    root !== getConfiguredSwitchRoot()
+  )
+    return;
+  if (installation?.clientVersion && input) {
+    input.value = installation.clientVersion;
+    const manager = getProviderManager();
+    const current = manager.getProviderConfig(config.id) as
+      | ApiKeyProviderConfig
+      | undefined;
+    if (
+      current &&
+      usesAutomaticCodexVersion(current) &&
+      current.baseUrl === config.baseUrl &&
+      (current.clientVersion !== installation.clientVersion ||
+        current.clientVersionMode !== "auto")
+    ) {
+      manager.updateProviderConfig(config.id, {
+        clientVersion: installation.clientVersion,
+        clientVersionMode: "auto",
+      });
+    }
+    if (status)
+      status.textContent = getString("pref-codex-version-detected", {
+        args: { version: installation.clientVersion, path: installation.root },
+      });
+  } else if (status) {
+    status.textContent = getString("pref-codex-version-missing");
+  }
+}
 
 type ProviderMetadata = ReturnType<
   typeof getProviderManager
@@ -149,6 +213,23 @@ export function populateApiKeyPanel(
     "pref-provider-client-version",
   ) as HTMLInputElement;
   if (versionEl) versionEl.value = config.clientVersion || CODEX_CLIENT_VERSION;
+  const autoVersionRow = doc.getElementById("pref-provider-autodetect-row");
+  if (autoVersionRow) autoVersionRow.hidden = !local;
+  const autoVersion = doc.getElementById(
+    "pref-provider-auto-version",
+  ) as XUL.Checkbox | null;
+  if (autoVersion) {
+    autoVersion.checked =
+      usesAutomaticCodexVersion(config) && isLoopbackUrl(config.baseUrl);
+    autoVersion.disabled = !isLoopbackUrl(config.baseUrl);
+  }
+  if (versionEl) versionEl.disabled = autoVersion?.checked === true;
+  const detectButton = doc.getElementById(
+    "pref-provider-detect-version",
+  ) as XUL.Button | null;
+  if (detectButton) detectButton.disabled = autoVersion?.checked !== true;
+  const versionStatus = doc.getElementById("pref-provider-version-status");
+  if (versionStatus) versionStatus.hidden = !local;
   for (const field of [
     maxTokensEl,
     temperatureEl,
@@ -208,6 +289,7 @@ export function populateApiKeyPanel(
 
   // Populate model list
   populateModelList(doc, config);
+  void autofillCodexSwitchVersion(doc, config).catch(() => {});
 }
 
 /**
@@ -421,6 +503,11 @@ export function saveCurrentProviderConfig(
       (
         doc.getElementById("pref-provider-client-version") as HTMLInputElement
       )?.value.trim() || CODEX_CLIENT_VERSION,
+    clientVersionMode: (
+      doc.getElementById("pref-provider-auto-version") as XUL.Checkbox | null
+    )?.checked
+      ? "auto"
+      : "manual",
     defaultModel: modelSelect?.value || "",
     maxTokens: parseInt(maxTokensEl?.value) || 8192,
     temperature: parseFloat(temperatureEl?.value) || 0.7,
@@ -560,16 +647,42 @@ export function bindApiKeyEvents(
   const baseurlInput = doc.getElementById(
     "pref-provider-baseurl",
   ) as HTMLInputElement;
-  baseurlInput?.addEventListener("blur", () =>
-    saveCurrentProviderConfig(doc, getCurrentProviderId()),
-  );
+  baseurlInput?.addEventListener("blur", () => {
+    const id = getCurrentProviderId();
+    saveCurrentProviderConfig(doc, id);
+    const current = providerManager.getProviderConfig(
+      id,
+    ) as ApiKeyProviderConfig;
+    if (current && isCodexSwitchConfig(current))
+      populateApiKeyPanel(
+        doc,
+        current,
+        providerManager.getProviderMetadata(id),
+      );
+  });
 
   const protocolSelect = doc.getElementById(
     "pref-provider-api-protocol",
   ) as unknown as XULMenuListElement;
   protocolSelect?.addEventListener("command", () => {
     const id = getCurrentProviderId();
+    const wasCodex =
+      (providerManager.getProviderConfig(id) as ApiKeyProviderConfig)
+        ?.apiProtocol === "codex-switch";
+    if (
+      protocolSelect.value === "codex-switch" &&
+      baseurlInput &&
+      !baseurlInput.value.trim()
+    )
+      baseurlInput.value = CODEX_SWITCH_BASE_URL;
     saveCurrentProviderConfig(doc, id);
+    if (
+      !wasCodex &&
+      protocolSelect.value === "codex-switch" &&
+      isLoopbackUrl(baseurlInput?.value || "")
+    ) {
+      providerManager.updateProviderConfig(id, { clientVersionMode: "auto" });
+    }
     const config = providerManager.getProviderConfig(
       id,
     ) as ApiKeyProviderConfig;
@@ -577,6 +690,29 @@ export function bindApiKeyEvents(
     onProviderListRefresh();
     onActiveProviderRefresh();
   });
+  doc
+    .getElementById("pref-provider-auto-version")
+    ?.addEventListener("command", () => {
+      const id = getCurrentProviderId();
+      saveCurrentProviderConfig(doc, id);
+      const current = providerManager.getProviderConfig(
+        id,
+      ) as ApiKeyProviderConfig;
+      populateApiKeyPanel(
+        doc,
+        current,
+        providerManager.getProviderMetadata(id),
+      );
+    });
+  doc
+    .getElementById("pref-provider-detect-version")
+    ?.addEventListener("click", () => {
+      const current = providerManager.getProviderConfig(
+        getCurrentProviderId(),
+      ) as ApiKeyProviderConfig;
+      if (current)
+        void autofillCodexSwitchVersion(doc, current).catch(() => {});
+    });
   doc
     .getElementById("pref-provider-client-version")
     ?.addEventListener("blur", () =>

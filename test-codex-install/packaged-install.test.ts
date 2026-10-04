@@ -1,4 +1,5 @@
 import { assert } from "chai";
+import { version } from "../package.json";
 
 const addonId = "paper-chat@zotero.plugin";
 const pref = "extensions.zotero.paperchat.installProbe";
@@ -58,7 +59,7 @@ describe("Packaged XPI installation in Zotero", function () {
       });
       stage = "verify installed add-on";
       assert.equal(installed.id, addonId);
-      assert.equal(installed.version, "3.7.2");
+      assert.equal(installed.version, version);
       assert.isFalse(installed.temporarilyInstalled);
       assert.isTrue(installed.isActive);
       const manifest = JSON.parse(

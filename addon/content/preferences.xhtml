@@ -528,6 +528,26 @@
             style="flex: 1; margin-left: 8px"
           ></html:input>
         </hbox>
+        <hbox
+          id="pref-provider-autodetect-row"
+          hidden="true"
+          align="center"
+          style="margin-bottom: 4px; margin-left: 78px"
+        >
+          <checkbox
+            id="pref-provider-auto-version"
+            data-l10n-id="pref-codex-auto-version"
+          />
+          <button
+            id="pref-provider-detect-version"
+            data-l10n-id="pref-codex-detect-version"
+          />
+        </hbox>
+        <html:div
+          id="pref-provider-version-status"
+          hidden="true"
+          style="font-size: 11px; margin: 0 0 8px 78px; overflow-wrap: anywhere"
+        ></html:div>
         <hbox align="center" style="margin-bottom: 8px">
           <label
             for="pref-provider-model"

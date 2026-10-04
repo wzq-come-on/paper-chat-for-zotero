@@ -126,6 +126,8 @@ export interface ApiKeyProviderConfig extends BaseProviderConfig {
   apiProtocol?: "chat" | "responses" | "codex-switch";
   /** Model discovery version required by Codex-compatible gateways. */
   clientVersion?: string;
+  /** Auto reads local CLI metadata; manual preserves an explicit version. */
+  clientVersionMode?: "auto" | "manual";
 }
 
 /**

@@ -1,7 +1,10 @@
-import { getPref } from "../../utils/prefs";
 import { getString } from "../../utils/locale";
 import { getVoiceWindow } from "../../utils/voiceWindow";
 import { throwIfAborted } from "../../utils/abort";
+import {
+  discoverCodexSwitchInstallation,
+  getConfiguredSwitchRoot,
+} from "../providers/CodexSwitchDiscovery";
 
 interface NativeProcess {
   stdin: { write(text: string): Promise<void> };
@@ -105,13 +108,13 @@ export async function transcribeWithCodex(
   const { Subprocess } = ChromeUtils.importESModule(
     "resource://gre/modules/Subprocess.sys.mjs",
   ) as { Subprocess: NativeSubprocess };
-  const env = Subprocess.getEnvironment();
-  const root =
-    String(getPref("speechCodexSwitchRoot") || "").trim() ||
-    (env.APPDATA ? PathUtils.join(env.APPDATA, "dev.codex.switch") : "");
-  if (!root || !(await IOUtils.exists(PathUtils.join(root, "settings.json")))) {
+  const installation = await discoverCodexSwitchInstallation(
+    getConfiguredSwitchRoot(),
+  );
+  if (!installation) {
     throw new Error(getString("chat-voice-codex-path-missing"));
   }
+  const { root, executable } = installation;
   const settings = (await IOUtils.readJSON(
     PathUtils.join(root, "settings.json"),
   )) as {
@@ -120,30 +123,6 @@ export async function transcribeWithCodex(
   };
   if (!settings.codexHome) {
     throw new Error(getString("chat-voice-codex-login-needed"));
-  }
-  const state = (await IOUtils.readJSON(
-    PathUtils.join(root, "state.json"),
-  )) as {
-    local_codex_path?: string;
-  };
-  let executable = state.local_codex_path || "";
-  if (!executable || !(await IOUtils.exists(executable))) {
-    const versions = await IOUtils.getChildren(
-      PathUtils.join(root, "codex-cli"),
-    );
-    versions.sort((a, b) => b.localeCompare(a, undefined, { numeric: true }));
-    executable = "";
-    for (const version of versions) {
-      const candidate = PathUtils.join(
-        version,
-        "bin",
-        Zotero.isWin ? "codex.exe" : "codex",
-      );
-      if (await IOUtils.exists(candidate)) {
-        executable = candidate;
-        break;
-      }
-    }
   }
   if (!executable) throw new Error(getString("chat-voice-codex-cli-missing"));
   throwIfAborted(signal);

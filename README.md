@@ -1,6 +1,8 @@
 <h1><img src="addon/content/icons/favicon.svg" width="32" height="32" alt=""> AI Paper Chat — Codex Switch fork</h1>
 
 本 fork 新增 **Codex Switch 本地代理**：模型发现、Responses 流式问答、划词翻译及工具调用，以及复用登录账号的原生语音转文字。
+
+从 3.7.9 起，同机使用 Codex Switch 时自动识别数据目录和 Codex CLI 客户端版本；打开设置或刷新模型即可更新。取消“自动识别本机版本”可手动填写，已有自定义版本会保留。语音设置也会显示检测到的数据目录，自定义安装位置可在这里指定。Windows 已实测；macOS/Linux 的默认目录识别有测试覆盖，语音仍需在对应系统上实机验证。
 下载 [Codex Switch 版 XPI](https://github.com/wzq-come-on/paper-chat-for-zotero/releases/latest)。
 见 [安装、配置与开发说明](CODEX-SWITCH.md)。保留上游作者署名与 AGPL-3.0-or-later 许可。
 本版本已关闭上游自动更新，以保留本地代理适配。以下为原项目介绍。

@@ -4,9 +4,24 @@ import {
   parseResponsesSSEStream,
 } from "./OpenAIResponsesProvider";
 import { createAbortController } from "../../utils/abort";
+import {
+  discoverCodexSwitchInstallation,
+  getConfiguredSwitchRoot,
+} from "./CodexSwitchDiscovery";
 
 export const CODEX_SWITCH_BASE_URL = "http://127.0.0.1:15722/v1";
 export const CODEX_CLIENT_VERSION = "0.159.1";
+
+export function usesAutomaticCodexVersion(
+  config: ApiKeyProviderConfig,
+): boolean {
+  if (config.clientVersionMode) return config.clientVersionMode === "auto";
+  // Upgrade the old built-in default without replacing custom version overrides.
+  return (
+    !config.clientVersion?.trim() ||
+    config.clientVersion === CODEX_CLIENT_VERSION
+  );
+}
 
 export function isCodexSwitchConfig(config: ApiKeyProviderConfig): boolean {
   return config.apiProtocol === "codex-switch";
@@ -69,11 +84,18 @@ export class CodexSwitchProvider extends OpenAIResponsesProvider {
   }
 
   async getAvailableModels(): Promise<string[]> {
+    const installation =
+      usesAutomaticCodexVersion(this._config) &&
+      isLoopbackUrl(this._config.baseUrl)
+        ? await discoverCodexSwitchInstallation(getConfiguredSwitchRoot())
+        : null;
     const url = new URL(this._config.baseUrl);
     url.pathname = `${url.pathname.replace(/\/+$/, "")}/models`;
     url.searchParams.set(
       "client_version",
-      this._config.clientVersion?.trim() || CODEX_CLIENT_VERSION,
+      installation?.clientVersion ||
+        this._config.clientVersion?.trim() ||
+        CODEX_CLIENT_VERSION,
     );
     const response = await fetch(url.toString(), {
       headers: this.requestHeaders(),

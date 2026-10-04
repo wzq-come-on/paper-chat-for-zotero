@@ -18,6 +18,8 @@ const isOnlineReleaseUpgradeTest =
   onlineReleaseUpgradeStage === "idempotency";
 const isPresentationProbe = process.env.PAPERCHAT_PRESENTATION_PROBE === "1";
 const isCodexProbe = process.env.PAPERCHAT_CODEX_TEST === "1";
+const isSwitchDiscoveryProbe =
+  process.env.PAPERCHAT_SWITCH_DISCOVERY_TEST === "1";
 const isVoiceProbe = process.env.PAPERCHAT_VOICE_TEST === "1";
 const isVoiceCaptureProbe = process.env.PAPERCHAT_VOICE_CAPTURE_TEST === "1";
 const isInstallProbe = process.env.PAPERCHAT_INSTALL_TEST === "1";
@@ -196,6 +198,17 @@ export default defineConfig({
 
   test: {
     waitForPlugin: `() => Zotero.${pkg.config.addonInstance}.data.initialized`,
+    ...(isSwitchDiscoveryProbe
+      ? {
+          entries: "test-switch-discovery",
+          startupDelay: 2000,
+          mocha: { timeout: 30000 },
+          prefs: {
+            "extensions.zotero.paperchat.guideShown": true,
+            "extensions.zotero.paperchat.nextQuestionHintEnabled": false,
+          },
+        }
+      : {}),
     ...(isVoiceCaptureProbe
       ? {
           entries: "test-voice-capture",

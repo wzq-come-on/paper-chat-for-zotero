@@ -328,7 +328,11 @@ export class ProviderManager {
         defaultModel: "",
         availableModels: [],
         ...(id === "codex-switch"
-          ? { apiProtocol: "codex-switch", clientVersion: CODEX_CLIENT_VERSION }
+          ? {
+              apiProtocol: "codex-switch",
+              clientVersion: CODEX_CLIENT_VERSION,
+              clientVersionMode: "auto",
+            }
           : {}),
       } as ApiKeyProviderConfig);
     });
