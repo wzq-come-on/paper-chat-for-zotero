@@ -33,12 +33,7 @@ export function buildEditedLastTurn(
 ): ChatSession | null {
   const user = getLastEditableUserMessage(session.messages);
   const trimmed = prompt.trim();
-  if (
-    !user ||
-    user.id !== messageId ||
-    !trimmed ||
-    trimmed === getEditableUserPrompt(user).trim()
-  )
+  if (!user || user.id !== messageId || !trimmed)
     return null;
   const index = session.messages.indexOf(user);
   const affected = new Set(session.messages.slice(index).map((m) => m.id));
