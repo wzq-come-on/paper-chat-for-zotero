@@ -81,6 +81,56 @@ export async function attachLocalFiles(
   }
 }
 
+/** Attach image data copied from a screenshot, browser, or image editor. */
+export async function attachClipboardImages(
+  context: ChatPanelContext,
+  items: readonly DataTransferItem[],
+  isCurrent: () => boolean,
+): Promise<boolean> {
+  const imageItems = items.filter(
+    (item) => item.kind === "file" && item.type.startsWith("image/"),
+  );
+  if (!imageItems.length) return false;
+  const availability = await refreshImageInputAvailability(
+    context.container,
+    context.chatManager,
+  );
+  if (!isCurrent()) return true;
+  if (availability === "unsupported") {
+    context.appendError(getString("chat-image-input-unsupported"));
+    return true;
+  }
+  const extractor = context.chatManager.getPdfExtractor() as {
+    imageBlobToBase64?: (
+      blob: Blob,
+    ) => Promise<{ data: string; mimeType: string } | null>;
+  };
+  if (typeof extractor.imageBlobToBase64 !== "function") {
+    context.appendError(getString("chat-attachment-drop-unavailable"));
+    return true;
+  }
+  const state = context.getAttachmentState();
+  for (const item of imageItems) {
+    const blob = item.getAsFile();
+    if (!blob || !isCurrent()) continue;
+    const result = await extractor.imageBlobToBase64(blob);
+    if (!result || !isCurrent()) continue;
+    const image: ImageAttachment = {
+      type: "base64",
+      ...result,
+      name: `pasted-image-${Date.now()}.jpg`,
+    };
+    if (!canAddImageAttachmentToDraft(state.pendingImages, image)) {
+      context.appendError(getImageAttachmentLimitMessage());
+      break;
+    }
+    state.pendingImages = [...state.pendingImages, image];
+  }
+  context.setAttachmentState(state);
+  context.updateAttachmentsPreview();
+  return true;
+}
+
 export function isFileDrop(transfer: DataTransfer | null): boolean {
   if (!transfer) return false;
   const types = Array.from(transfer.types);
@@ -157,6 +207,24 @@ export function setupLocalFileAttachments(context: ChatPanelContext): {
   container.addEventListener("dragover", acceptDrag, true);
   container.addEventListener("dragleave", leave, true);
   container.addEventListener("drop", drop, true);
+  const paste = (event: ClipboardEvent) => {
+    const items = Array.from(event.clipboardData?.items || []);
+    if (
+      !items.some(
+        (item) => item.kind === "file" && item.type.startsWith("image/"),
+      )
+    )
+      return;
+    event.preventDefault();
+    event.stopPropagation();
+    void attachClipboardImages(context, items, captureDraft()).catch(
+      (error) => {
+        ztoolkit.log("[Chat] Failed to attach pasted image:", error);
+        context.appendError(getString("chat-attachment-drop-unavailable"));
+      },
+    );
+  };
+  container.addEventListener("paste", paste, true);
   const win = container.ownerDocument.defaultView;
   win?.addEventListener("dragend", resetDrag);
   win?.addEventListener("blur", resetDrag);
@@ -189,6 +257,7 @@ export function setupLocalFileAttachments(context: ChatPanelContext): {
       container.removeEventListener("dragover", acceptDrag, true);
       container.removeEventListener("dragleave", leave, true);
       container.removeEventListener("drop", drop, true);
+      container.removeEventListener("paste", paste, true);
       win?.removeEventListener("dragend", resetDrag);
       win?.removeEventListener("blur", resetDrag);
     },

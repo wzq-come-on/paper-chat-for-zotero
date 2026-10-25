@@ -136,7 +136,7 @@ export class PdfExtractor {
   ): Promise<{ data: string; mimeType: string } | null> {
     try {
       const data = await IOUtils.read(filePath);
-      return await this.compressImageToJpegBase64(
+      return await this.imageBytesToBase64(
         data,
         this.getImageMimeType(filePath),
       );
@@ -144,6 +144,26 @@ export class PdfExtractor {
       ztoolkit.log("Error reading image file:", error);
       return null;
     }
+  }
+
+  /** Compress an image supplied by the browser clipboard. */
+  async imageBlobToBase64(
+    blob: Blob,
+  ): Promise<{ data: string; mimeType: string } | null> {
+    try {
+      const bytes = new Uint8Array(await blob.arrayBuffer());
+      return await this.imageBytesToBase64(bytes, blob.type || "image/png");
+    } catch (error) {
+      ztoolkit.log("Error reading clipboard image:", error);
+      return null;
+    }
+  }
+
+  private async imageBytesToBase64(
+    data: Uint8Array,
+    mimeType: string,
+  ): Promise<{ data: string; mimeType: string }> {
+    return this.compressImageToJpegBase64(data, mimeType);
   }
 
   /**

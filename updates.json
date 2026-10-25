@@ -3,6 +3,17 @@
     "paper-chat@zotero.plugin": {
       "updates": [
         {
+          "version": "3.7.10",
+          "update_link": "https://github.com/wzq-come-on/paper-chat-for-zotero/releases/download/v3.7.10/ai-paper-chat-codex-switch-3.7.10.xpi",
+          "update_hash": "sha256:d52beea4b68986627107ba13fb3b6e3d4da596303d29cc7cb914f7bac00d7e30",
+          "applications": {
+            "zotero": {
+              "strict_min_version": "6.999",
+              "strict_max_version": "10.*"
+            }
+          }
+        },
+        {
           "version": "3.7.9",
           "update_link": "https://github.com/wzq-come-on/paper-chat-for-zotero/releases/download/v3.7.9/ai-paper-chat-codex-switch-3.7.9.xpi",
           "update_hash": "sha256:fbd26ab8ddd6876b061d3d7a4f9da048f956cfe655428d5c588079a989f96eed",

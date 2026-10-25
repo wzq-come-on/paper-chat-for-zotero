@@ -1,4 +1,12 @@
-# Validation — 3.7.9
+# Validation — 3.7.10
+
+## Clipboard image paste — 3.7.10 (2026-10-25)
+
+- Added direct `Ctrl+V` / `Cmd+V` image paste to the chat composer.
+- Clipboard images are compressed through the same image pipeline as file
+  attachments and appear in the attachment preview before sending.
+- Text paste keeps its normal textarea behavior. Multiple clipboard images are
+  accepted subject to the existing image count and size limits.
 
 ## Automatic Switch setup — 3.7.9 (2026-10-04)
 
