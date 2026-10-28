@@ -68,7 +68,9 @@ export function openUserMessageEditor(
     (actions.querySelector(".edit-message-btn") as HTMLElement | null)?.focus();
   };
   const update = () => {
-    send.disabled = !input.value.trim() || input.value.trim() === prompt.trim();
+    // Resend is useful after a transient provider failure even when the user
+    // leaves the prompt unchanged. Only an empty prompt is invalid.
+    send.disabled = !input.value.trim();
   };
   input.addEventListener("input", update);
   cancel.addEventListener("click", restore);
